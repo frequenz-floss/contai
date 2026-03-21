@@ -6,9 +6,15 @@ command -v container >/dev/null 2>&1 && runtime=container
 
 tool=$(basename "$0")
 
+# When called as 'contai', use first arg as tool name and shift it out.
+# This allows 'contai opencode --version' to pass '--version' to opencode.
 if test "$tool" = "contai"
 then
-	tool=
+	tool=${1:-}
+	if test -n "$tool"
+	then
+		shift
+	fi
 fi
 
 data_dir=~/.local/share/contai
