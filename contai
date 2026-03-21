@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 
+runtime=docker
+command -v container >/dev/null 2>&1 && runtime=container
+
 tool=$(basename "$0")
 
 if test "$tool" = "contai"
@@ -9,21 +12,27 @@ then
 fi
 
 data_dir=~/.local/share/contai
-
 home_dir=$data_dir/home
 env_file="$data_dir/env.list"
+container_home="/home/$(id -un)"
 
 mkdir -p "$home_dir"
 touch "$env_file"
 
-docker run \
+security_opts=
+if test "$runtime" = "docker"
+then
+	security_opts="--cap-drop=ALL --security-opt=no-new-privileges"
+fi
+
+# shellcheck disable=SC2086
+$runtime run \
 	--rm \
 	-it \
-	--user $(id -un):$(id -gn) \
-	--cap-drop=ALL \
-	--security-opt=no-new-privileges \
-	--env-file $env_file \
-	-v "$home_dir:$HOME" \
+	--user "$(id -un):$(id -gn)" \
+	$security_opts \
+	--env-file "$env_file" \
+	-v "$home_dir:$container_home" \
 	-v "$PWD:$PWD" \
 	-w "$PWD" \
 	contai:latest \

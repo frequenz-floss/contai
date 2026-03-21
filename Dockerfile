@@ -8,7 +8,7 @@ ARG GID
 ARG GROUPNAME
 
 RUN userdel --force --remove ubuntu && \
-	groupadd --gid ${GID} ${GROUPNAME} && \
+	(getent group ${GID} || groupadd --gid ${GID} ${GROUPNAME}) && \
 	useradd --create-home --shell /bin/bash --gid ${GID} --uid ${UID} ${USERNAME}
 
 RUN apt-get update && apt-get install -y \
