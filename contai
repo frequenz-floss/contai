@@ -31,6 +31,12 @@ then
 	security_opts="--cap-drop=ALL --security-opt=no-new-privileges"
 fi
 
+if ! $runtime image inspect contai:latest >/dev/null 2>&1
+then
+	echo "Error: Image 'contai:latest' not found. Run './build.sh' first." >&2
+	exit 1
+fi
+
 # shellcheck disable=SC2086
 $runtime run \
 	--rm \
