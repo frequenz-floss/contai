@@ -25,6 +25,10 @@ system (i.e. normal people).
   installing additional tools without root access
 - **Symlink-friendly**: Can be symlinked as different tool names (e.g.,
   `opencode` symlink runs OpenCode directly)
+- **Apple Container Runtime**: Supports Apple's new `container` runtime with
+  automatic detection, falling back to Docker
+- **Timezone Passthrough**: Automatically detects and passes your host timezone
+  to the container for correct git commit timestamps
 
 ## Build
 
@@ -37,7 +41,50 @@ To build the container image:
 This will create a Docker image tagged as `contai:latest` with your host user's
 UID/GID for proper file permissions.
 
+The build script automatically detects Apple's `container` runtime if available,
+falling back to Docker. You can override the runtime with the `RUNTIME` environment
+variable:
+
+```sh
+RUNTIME=docker ./build.sh
+```
+
 ## Installation
+
+### Using Makefile (Recommended)
+
+The easiest way to install `contai` is using the provided Makefile:
+
+```sh
+make install                    # Install to ~/.local/bin
+sudo make install PREFIX=/usr/local  # Install system-wide
+                                     # (requires "make image" step separately)
+```
+
+The Makefile will:
+- Build the image if needed (unless running as root)
+- Copy `contai` to `$(PREFIX)/bin`
+- Create symlinks for each AI tool (`opencode`, `copilot`, `codex`, `gemini`, `claude`)
+
+To install via symlink instead of copy:
+
+```sh
+METHOD=link make install
+```
+
+**Note**: The symlink method is useful for development, as changes to `contai` in
+your source tree take effect immediately without reinstalling. Not recommended
+for system-wide installations as the source directory becomes a trusted path.
+
+Other useful targets:
+
+```sh
+make image  # Build the Docker image
+make clean  # Remove the image and build stamp
+make help   # Show available targets
+```
+
+### Manual Installation
 
 After building, you can install `contai` to your PATH:
 
@@ -139,6 +186,15 @@ You can define environment variables in the container by writing to a
 `~/.local/share/contai/env.list` file. The file is expected to have the
 standard [docker `--env-file`
 format](https://docs.docker.com/reference/cli/docker/container/run/#env).
+
+### Runtime Variables
+
+The following environment variables control the container runtime:
+
+- `RUNTIME`: Override the container runtime (`docker` or `container`). By default,
+  the script auto-detects Apple's `container` runtime, falling back to Docker.
+- `TZ`: Override the timezone passed to the container. By default, the script
+  detects the host timezone from `/etc/localtime`.
 
 ## Known Issues
 
