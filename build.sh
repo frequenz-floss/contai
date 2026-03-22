@@ -1,11 +1,14 @@
 #!/bin/sh
 set -eu
 
-runtime=docker
-command -v container >/dev/null 2>&1 && runtime=container
+# Use RUNTIME from environment if set, otherwise auto-detect
+if test -z "${RUNTIME:-}"; then
+	RUNTIME=docker
+	command -v container >/dev/null 2>&1 && RUNTIME=container
+fi
 
-if test "$runtime" = "docker"; then
-	$runtime build \
+if test "$RUNTIME" = "docker"; then
+	$RUNTIME build \
 		-t contai:latest \
 		--build-arg UID="$(id -u)" \
 		--build-arg USERNAME="$(id -un)" \
@@ -14,7 +17,7 @@ if test "$runtime" = "docker"; then
 		"$@" \
 		- <Dockerfile
 else
-	$runtime --debug build \
+	$RUNTIME --debug build \
 		-t contai:latest \
 		--build-arg UID="$(id -u)" \
 		--build-arg USERNAME="$(id -un)" \

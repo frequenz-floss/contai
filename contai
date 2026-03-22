@@ -1,8 +1,12 @@
 #!/bin/sh
 set -eu
 
-runtime=docker
-command -v container >/dev/null 2>&1 && runtime=container
+# Use RUNTIME from environment if set, otherwise auto-detect
+if test -z "${RUNTIME:-}"
+then
+	RUNTIME=docker
+	command -v container >/dev/null 2>&1 && RUNTIME=container
+fi
 
 tool=$(basename "$0")
 
@@ -26,19 +30,19 @@ mkdir -p "$home_dir"
 touch "$env_file"
 
 security_opts=
-if test "$runtime" = "docker"
+if test "$RUNTIME" = "docker"
 then
 	security_opts="--cap-drop=ALL --security-opt=no-new-privileges"
 fi
 
-if ! $runtime image inspect contai:latest >/dev/null 2>&1
+if ! $RUNTIME image inspect contai:latest >/dev/null 2>&1
 then
 	echo "Error: Image 'contai:latest' not found. Run './build.sh' first." >&2
 	exit 1
 fi
 
 # shellcheck disable=SC2086
-$runtime run \
+$RUNTIME run \
 	--rm \
 	-it \
 	--user "$(id -un):$(id -gn)" \
