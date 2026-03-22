@@ -29,6 +29,12 @@ container_home="/home/$(id -un)"
 mkdir -p "$home_dir"
 touch "$env_file"
 
+# Detect host timezone
+if test -z "${TZ:-}"
+then
+	TZ=$(readlink /etc/localtime 2>/dev/null | sed 's|.*/zoneinfo/||') || true
+fi
+
 security_opts=
 if test "$RUNTIME" = "docker"
 then
@@ -41,6 +47,13 @@ then
 	exit 1
 fi
 
+tz_opt=
+if test -n "${TZ:-}"
+then
+	# especially important for git commits
+	tz_opt="-e TZ=$TZ"
+fi
+
 # shellcheck disable=SC2086
 $RUNTIME run \
 	--rm \
@@ -51,6 +64,7 @@ $RUNTIME run \
 	-v "$home_dir:$container_home" \
 	-v "$PWD:$PWD" \
 	-w "$PWD" \
+	$tz_opt \
 	contai:latest \
 	$tool \
 	"$@"
