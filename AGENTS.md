@@ -28,6 +28,9 @@ contai/
 |--------------|----------------------------------------------------------|
 | `./build.sh` | Builds Docker image tagged as `contai:latest`            |
 | `./contai`   | Runs the container with current directory mounted        |
+| `make image` | Build the Docker image (via Makefile)                    |
+| `make install` | Install contai to `~/.local/bin` (or custom `PREFIX`)  |
+| `make clean` | Remove the Docker image and build stamp                  |
 
 ### Building the Container
 
@@ -36,6 +39,17 @@ contai/
 ```
 
 The build script passes host UID/GID to ensure proper file permissions inside the container.
+
+### Installing with Makefile
+
+```sh
+make install                    # Install to ~/.local/bin (builds image if needed)
+make install PREFIX=/usr/local # Install to /usr/local/bin
+sudo make install PREFIX=/usr/local # Install as root (requires pre-built image)
+METHOD=link make install        # Symlink instead of copy
+```
+
+Note: Running `make install` as root requires the image to be built first (run `make image` as non-root).
 
 ### Running the Container
 
