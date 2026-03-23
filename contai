@@ -9,7 +9,10 @@ then
 fi
 
 tool=$(basename "$0")
-
+# TODO do we want to whitelist $tool to prevent the container from being
+# run maliciously with arbitrary commands. Maybe with an exception for
+# development/debugging?
+#
 # When called as 'contai', use first arg as tool name and shift it out.
 # This allows 'contai opencode --version' to pass '--version' to opencode.
 if test "$tool" = "contai"
