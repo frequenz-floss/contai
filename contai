@@ -3,8 +3,7 @@ set -eu
 
 tool=$(basename "$0")
 
-if test "$tool" = "contai"
-then
+if test "$tool" = "contai"; then
 	tool=
 fi
 
@@ -27,11 +26,9 @@ touch "$env_file" "$run_opts_file"
 opts_path=$run_opts_file
 hops=0
 
-while test -L "$opts_path"
-do
+while test -L "$opts_path"; do
 	hops=$((hops + 1))
-	if test "$hops" -gt 40
-	then
+	if test "$hops" -gt 40; then
 		echo "contai: too many symbolic links to follow from $run_opts_file" >&2
 		exit 1
 	fi
@@ -60,8 +57,7 @@ pwd_prefix=${pwd_real%/}
 data_dir_real=$(cd "$data_dir" && pwd -P)
 opts_dir_real=$(cd "$(dirname "$opts_path")" && pwd -P)
 
-for exposed in "$data_dir_real" "$opts_dir_real"
-do
+for exposed in "$data_dir_real" "$opts_dir_real"; do
 	case $exposed/ in
 	"$pwd_prefix"/*)
 		echo "contai: refusing to run from $pwd_real" >&2
@@ -77,8 +73,7 @@ done
 # and paths may contain spaces.
 run_opts=()
 
-while IFS= read -r opt || test -n "$opt"
-do
+while IFS= read -r opt || test -n "$opt"; do
 	case $opt in
 	'' | \#*)
 		continue
@@ -89,8 +84,7 @@ done < "$run_opts_file"
 
 cmd=(contai:latest /usr/local/bin/contai-bootstrap)
 
-if test -n "$tool"
-then
+if test -n "$tool"; then
 	cmd+=("$tool")
 fi
 

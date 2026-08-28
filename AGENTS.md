@@ -62,11 +62,18 @@ No project-level linting is configured. However, the container includes these to
 - Shell: `shellcheck`, `shfmt`
 - Python: `ruff`, `flake8`, `pylint`, `mypy`, `black`, `isort`
 
-To lint shell scripts locally (if shellcheck is installed):
+Formatting is enforced by `shfmt`, configured through `.editorconfig`. To
+check and fix locally:
+
 ```sh
 shellcheck build.sh contai contai-bootstrap
-shfmt -d build.sh contai contai-bootstrap
+shfmt -d .   # report
+shfmt -w .   # fix
 ```
+
+`shfmt` finds the extensionless scripts by their shebang, so no file list is
+needed. Do not hand-format against it: what `shfmt` produces is the house
+style by definition.
 
 ## Code Style Guidelines
 
@@ -110,9 +117,10 @@ set -eu
 #### Conditionals
 - Use `test` command or `[` for conditions: `if test "$tool" = "contai"`
 - Use `=` for string comparison, not `==`
+- Keep `then` and `do` on the `if`/`while` line, as `shfmt` writes them
 
 #### Indentation
-- Use tabs for indentation, not spaces
+- Use tabs for indentation, not spaces (set by `.editorconfig`)
 - Indent continuation lines in multi-line commands
 
 #### Line Continuation
@@ -130,8 +138,7 @@ home_dir=$data_dir/home
 container_home=$HOME
 
 # Conditionals
-if test -d "$home_dir"
-then
+if test -d "$home_dir"; then
 	echo "Directory exists"
 fi
 

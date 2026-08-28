@@ -3,20 +3,17 @@ set -eu
 
 tool=
 
-if test $# -gt 0
-then
+if test $# -gt 0; then
 	tool=$1
 	shift
 fi
 
 enable_rtk() {
-	if ! command -v rtk >/dev/null 2>&1
-	then
+	if ! command -v rtk > /dev/null 2>&1; then
 		return
 	fi
 
-	if test "$tool" = "rtk"
-	then
+	if test "$tool" = "rtk"; then
 		return
 	fi
 
@@ -31,8 +28,7 @@ enable_rtk() {
 
 	# RTK's Copilot integration is project-scoped, so only install it when
 	# launching Copilot and write it into the current project's root.
-	if test "$tool" = "copilot"
-	then
+	if test "$tool" = "copilot"; then
 		enable_rtk_copilot
 	fi
 }
@@ -40,11 +36,9 @@ enable_rtk() {
 run_rtk_init() {
 	# RTK's --auto-patch flag does not disable its telemetry prompt. Always opt
 	# out for this automated setup invocation so startup never waits for input.
-	if ! RTK_TELEMETRY_DISABLED=1 rtk "$@" >/dev/null 2>&1
-	then
+	if ! RTK_TELEMETRY_DISABLED=1 rtk "$@" > /dev/null 2>&1; then
 		printf 'contai: failed to initialize RTK with: rtk' >&2
-		for arg in "$@"
-		do
+		for arg in "$@"; do
 			printf ' %s' "$arg" >&2
 		done
 		printf '\n' >&2
@@ -57,24 +51,21 @@ run_rtk_init() {
 enable_rtk_copilot() {
 	project_dir=$PWD
 
-	if git_root=$(git rev-parse --show-toplevel 2>/dev/null)
-	then
+	if git_root=$(git rev-parse --show-toplevel 2> /dev/null); then
 		project_dir=$git_root
 	fi
 
 	if ! (
 		cd "$project_dir"
-		RTK_TELEMETRY_DISABLED=1 rtk init -g --copilot >/dev/null 2>&1
-	)
-	then
+		RTK_TELEMETRY_DISABLED=1 rtk init -g --copilot > /dev/null 2>&1
+	); then
 		printf 'contai: failed to initialize RTK Copilot integration in %s\n' "$project_dir" >&2
 	fi
 }
 
 enable_rtk
 
-if test -n "$tool"
-then
+if test -n "$tool"; then
 	exec "$tool" "$@"
 fi
 
