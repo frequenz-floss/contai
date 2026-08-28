@@ -89,8 +89,9 @@ set -eu
 - Always include `set -eu` immediately after the shebang
   - `-e`: Exit immediately on command failure
   - `-u`: Treat unset variables as errors
-  - with bash, note that `"${array[@]}"` on an empty array needs bash 4.4
-    or newer under `-u`
+  - with bash, expand an array that may be empty as `"${a[@]+"${a[@]}"}"`.
+    Plain `"${a[@]}"` is an unbound variable error under `-u` before bash
+    4.4, and macOS still ships bash 3.2 as `/bin/bash`
 
 #### Variable Naming
 - Use lowercase with underscores: `data_dir`, `home_dir`, `env_file`
@@ -194,6 +195,8 @@ RUN pip install --break-system-packages \
 The container uses these host directories:
 - `~/.local/share/contai/home`: Persistent home directory
 - `~/.local/share/contai/env.list`: Environment variables for container
+- `~/.local/share/contai/docker-run-opts.list`: Extra `docker run` options, one
+  argument per line, appended after contai's own (see README.md)
 
 ## Adding New Features
 
