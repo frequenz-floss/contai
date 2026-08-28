@@ -15,6 +15,8 @@ Read README.md for complete project documentation including features and usage.
 
 ```
 contai/
+├── .editorconfig          # shfmt/editor settings
+├── .github/workflows/     # CI: shfmt and shellcheck via reviewdog
 ├── AGENTS.md              # This file - AI agent instructions
 ├── README.md              # Project documentation
 ├── Dockerfile             # Container definition with dev tools
@@ -58,12 +60,14 @@ This project has no test suite. Changes should be verified by:
 
 ## Linting
 
-No project-level linting is configured. However, the container includes these tools:
+The container includes these tools:
 - Shell: `shellcheck`, `shfmt`
 - Python: `ruff`, `flake8`, `pylint`, `mypy`, `black`, `isort`
 
-Formatting is enforced by `shfmt`, configured through `.editorconfig`. To
-check and fix locally:
+Formatting is enforced by `shfmt`, configured through `.editorconfig`, and
+both it and `shellcheck` run on every pull request via
+`.github/workflows/lint.yml`, reporting inline through reviewdog. To check and
+fix locally:
 
 ```sh
 shellcheck build.sh contai contai-bootstrap
@@ -238,6 +242,10 @@ When modifying this project:
 4. **New system tools**: Add to apt-get install section in Dockerfile
 5. **Runtime tool initialization**: Keep startup logic in `contai-bootstrap`
    when it depends on the mounted container home or current project
+6. **GitHub Actions**: pin every action to a full commit hash, with a trailing
+   comment naming the version it resolves to, as in
+   `uses: actions/checkout@3d3c42e... # v7.0.1`. Tags and branches can be
+   moved to point at other code after review, so a tag is not a pin
 
 Automatic RTK initialization always sets `RTK_TELEMETRY_DISABLED` to `1` so it
 cannot block on a first-run consent prompt. Users can opt in separately with
