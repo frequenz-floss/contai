@@ -102,7 +102,7 @@ docker run \
 	--rm \
 	--init \
 	-it \
-	--user $(id -un):$(id -gn) \
+	--user "$(id -un):$(id -gn)" \
 	--cap-drop=ALL \
 	--security-opt=no-new-privileges \
 	-e TERM="$TERM" -e COLORTERM="$COLORTERM" \
