@@ -217,12 +217,17 @@ this a sandbox at all: `--cap-drop=ALL`, `--security-opt=no-new-privileges`,
 mounting this file, or any directory holding it, into the container: whatever
 runs there could then choose the options of every later run.
 
-Nothing running in the container can normally reach this file, as only the
-current directory and the container home are mounted. That stops holding if
-contai is started from a directory that contains it, `~/.local` for instance,
-because the current directory is mounted writable: whatever runs in the
-container could then choose the options of the next run, and escape. So do
-not start contai from an ancestor of `~/.local/share/contai`.
+Short of mounting it yourself, nothing running in the container can reach this
+file, as only the current directory and the container home are mounted. The
+remaining way to expose it is starting contai from a directory that contains
+it, `~/.local` for instance, since the current directory is mounted writable:
+whatever runs in the container could then pick the options of the next run,
+and escape. contai refuses to start from such a directory rather than allowing
+it.
+
+That check exists to catch the easy mistake, not to be a boundary. It follows
+symbolic links to find where the file really lives, but it cannot account for
+every way of making it writable from the container, and does not try to.
 
 ### Mounting Directories
 
