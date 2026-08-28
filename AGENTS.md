@@ -78,10 +78,19 @@ All shell scripts in this project follow these conventions:
 #!/bin/sh
 set -eu
 ```
-- Always use `#!/bin/sh` (POSIX shell), not `#!/bin/bash`
+- Prefer `#!/bin/sh` (POSIX shell): these scripts run on the host, before
+  the container exists, so the fewer things they need the better
+- Use `#!/usr/bin/env bash` only when a script genuinely needs bash, and say
+  why. `contai` does, for arrays: it builds lists of arguments of unknown
+  length and has to keep every element quoted, which POSIX `sh` cannot express
+  without either `eval` or juggling the positional parameters. Prefer `env`
+  over `#!/bin/bash`, as bash is not at that path everywhere, and list the
+  requirement in the README
 - Always include `set -eu` immediately after the shebang
   - `-e`: Exit immediately on command failure
   - `-u`: Treat unset variables as errors
+  - with bash, note that `"${array[@]}"` on an empty array needs bash 4.4
+    or newer under `-u`
 
 #### Variable Naming
 - Use lowercase with underscores: `data_dir`, `home_dir`, `env_file`

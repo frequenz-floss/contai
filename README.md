@@ -30,6 +30,13 @@ system (i.e. normal people).
 - **Symlink-friendly**: Can be symlinked as different tool names (e.g.,
   `opencode` symlink runs OpenCode directly)
 
+## Requirements
+
+On the host you need [Docker](https://docs.docker.com/engine/install/), usable
+by your own user, and `bash` for the `contai` script itself. Any version of
+bash will do, including the 3.2 that macOS still ships as `/bin/bash`. The
+other scripts are POSIX `sh`. Everything else lives inside the container.
+
 ## Build
 
 To build the container image:
