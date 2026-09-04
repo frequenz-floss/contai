@@ -30,6 +30,13 @@ system (i.e. normal people).
 - **Symlink-friendly**: Can be symlinked as different tool names (e.g.,
   `opencode` symlink runs OpenCode directly)
 
+## Requirements
+
+On the host you need [Docker](https://docs.docker.com/engine/install/), usable
+by your own user, and `bash` for the `contai` script itself. Any version of
+bash will do, including the 3.2 that macOS still ships as `/bin/bash`. The
+other scripts are POSIX `sh`. Everything else lives inside the container.
+
 ## Build
 
 To build the container image:
@@ -179,6 +186,66 @@ You can define environment variables in the container by writing to a
 `~/.local/share/contai/env.list` file. The file is expected to have the
 standard [docker `--env-file`
 format](https://docs.docker.com/reference/cli/docker/container/run/#env).
+
+## Extra Docker Run Options
+
+Arbitrary `docker run` options can be added in
+`~/.local/share/contai/docker-run-opts.list`. Each line is **one argument**,
+taken verbatim, so nothing needs quoting or escaping and paths may contain
+spaces. Blank lines and lines starting with `#` are ignored.
+
+Use the `--option=value` form so an option and its value fit on one line:
+
+```
+--volume=/data/models:/data/models:ro
+--network=host
+--gpus=all
+```
+
+An option that exists only in the two-word form takes two lines:
+
+```
+--add-host
+myhost:10.0.0.1
+```
+
+These are passed after contai's own options, so they win where docker lets a
+later option override an earlier one. That includes the options that make
+this a sandbox at all: `--cap-drop=ALL`, `--security-opt=no-new-privileges`,
+`--user`, and which directories are mounted. Putting `--privileged` or
+`--user=root` in here gives away most of the point of contai, and so does
+mounting this file, or any directory holding it, into the container: whatever
+runs there could then choose the options of every later run.
+
+Short of mounting it yourself, nothing running in the container can reach this
+file, as only the current directory and the container home are mounted. The
+remaining way to expose it is starting contai from a directory that contains
+it, `~/.local` for instance, since the current directory is mounted writable:
+whatever runs in the container could then pick the options of the next run,
+and escape. contai refuses to start from such a directory rather than allowing
+it.
+
+That check exists to catch the easy mistake, not to be a boundary. It follows
+symbolic links to find where the file really lives, but it cannot account for
+every way of making it writable from the container, and does not try to.
+
+### Mounting Directories
+
+Two things are worth keeping in mind when adding `--volume`.
+
+Create the host directory first. Docker creates a missing bind mount source
+itself, but owned by `root`, which the container user then cannot write to.
+
+Mounting a directory at the same path on both sides keeps absolute paths
+recorded inside it valid on both sides. Python virtualenvs are a good
+example: they name their interpreter by absolute path in `pyvenv.cfg` and
+`bin/python`, so a virtualenv is only usable from both the host and the
+container when its interpreter is reachable at a single path that exists in
+both.
+
+Prefer `:ro` for anything the host executes. A writable mount lets whatever
+runs in the container replace a binary, a cached package or a sourced shell
+snippet that the host later runs, which defeats the point of the sandbox.
 
 ## Known Issues
 

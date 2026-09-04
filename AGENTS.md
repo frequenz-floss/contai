@@ -78,10 +78,20 @@ All shell scripts in this project follow these conventions:
 #!/bin/sh
 set -eu
 ```
-- Always use `#!/bin/sh` (POSIX shell), not `#!/bin/bash`
+- Prefer `#!/bin/sh` (POSIX shell): these scripts run on the host, before
+  the container exists, so the fewer things they need the better
+- Use `#!/usr/bin/env bash` only when a script genuinely needs bash, and say
+  why. `contai` does, for arrays: it builds lists of arguments of unknown
+  length and has to keep every element quoted, which POSIX `sh` cannot express
+  without either `eval` or juggling the positional parameters. Prefer `env`
+  over `#!/bin/bash`, as bash is not at that path everywhere, and list the
+  requirement in the README
 - Always include `set -eu` immediately after the shebang
   - `-e`: Exit immediately on command failure
   - `-u`: Treat unset variables as errors
+  - with bash, expand an array that may be empty as `"${a[@]+"${a[@]}"}"`.
+    Plain `"${a[@]}"` is an unbound variable error under `-u` before bash
+    4.4, and macOS still ships bash 3.2 as `/bin/bash`
 
 #### Variable Naming
 - Use lowercase with underscores: `data_dir`, `home_dir`, `env_file`
@@ -185,6 +195,8 @@ RUN pip install --break-system-packages \
 The container uses these host directories:
 - `~/.local/share/contai/home`: Persistent home directory
 - `~/.local/share/contai/env.list`: Environment variables for container
+- `~/.local/share/contai/docker-run-opts.list`: Extra `docker run` options, one
+  argument per line, appended after contai's own (see README.md)
 
 ## Adding New Features
 
