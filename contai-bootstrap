@@ -20,6 +20,10 @@ enable_rtk() {
 		return
 	fi
 
+	# RTK writes Claude's global files atomically and expects this directory to
+	# exist when the persistent home is new.
+	mkdir -p "$HOME/.claude"
+
 	run_rtk_init init -g --auto-patch
 	run_rtk_init init -g --gemini --auto-patch
 	run_rtk_init init -g --codex
@@ -34,7 +38,9 @@ enable_rtk() {
 }
 
 run_rtk_init() {
-	if ! rtk "$@" >/dev/null 2>&1
+	# RTK's --auto-patch flag does not disable its telemetry prompt. Always opt
+	# out for this automated setup invocation so startup never waits for input.
+	if ! RTK_TELEMETRY_DISABLED=1 rtk "$@" >/dev/null 2>&1
 	then
 		printf 'contai: failed to initialize RTK with: rtk' >&2
 		for arg in "$@"
@@ -58,7 +64,7 @@ enable_rtk_copilot() {
 
 	if ! (
 		cd "$project_dir"
-		rtk init -g --copilot >/dev/null 2>&1
+		RTK_TELEMETRY_DISABLED=1 rtk init -g --copilot >/dev/null 2>&1
 	)
 	then
 		printf 'contai: failed to initialize RTK Copilot integration in %s\n' "$project_dir" >&2
