@@ -69,13 +69,14 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
 	apt update && \
 	apt install -y nodejs
 
+# The native Claude installer is user-scoped, so use its system-wide npm
+# package alongside the other globally installed CLI tools.
 RUN npm install -g \
+	@anthropic-ai/claude-code@latest \
 	@github/copilot@latest \
 	@google/gemini-cli@latest \
 	@openai/codex@latest \
 	opencode-ai@latest
-
-RUN curl -fsSL https://claude.ai/install.sh | bash
 
 RUN curl -Ls https://pkgx.sh/$(uname)/$(uname -m) -o /usr/local/bin/pkgx && \
 	chmod +x /usr/local/bin/pkgx

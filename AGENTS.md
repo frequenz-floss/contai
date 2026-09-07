@@ -52,8 +52,9 @@ This project has no test suite. Changes should be verified by:
 1. Building the container: `./build.sh`
 2. Running the container and testing functionality: `./contai`
 3. Verifying the AI tools work: `./contai opencode --version`
-4. Verifying binary-installed tools work: `./contai rtk --version`
-5. Verifying RTK bootstrap writes the expected runtime config for shipped tools
+4. Verifying Claude Code is available to the mapped user: `./contai claude --version`
+5. Verifying binary-installed tools work: `./contai rtk --version`
+6. Verifying RTK bootstrap writes the expected runtime config for shipped tools
 
 ## Linting
 
@@ -187,6 +188,10 @@ keep in their own configuration.
 2. Python packages via `pip` (with `--break-system-packages`)
 3. Node.js setup and npm packages
 4. Binary downloads and installations
+
+Claude Code should use the system-wide npm package in the image. The native
+installer writes its launcher below `$HOME/.local/bin`, which is not a suitable
+image-wide location when the image is built as `root`.
 
 #### Example Dockerfile Pattern
 ```dockerfile
