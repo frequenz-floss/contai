@@ -7,9 +7,14 @@ ARG USERNAME
 ARG GID
 ARG GROUPNAME
 
+# The home directory is the host's own, so that the persistent home the runner
+# mounts there sits at one path on both sides. See the ENV at the end.
+ARG HOME_DIR
+
 RUN userdel --force --remove ubuntu && \
 	groupadd --gid ${GID} ${GROUPNAME} && \
-	useradd --create-home --shell /bin/bash --gid ${GID} --uid ${UID} ${USERNAME}
+	useradd --create-home --home-dir "${HOME_DIR}" --shell /bin/bash \
+		--gid ${GID} --uid ${UID} ${USERNAME}
 
 RUN apt-get update && apt-get install -y \
 	bash-completion \
@@ -64,13 +69,14 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
 	apt update && \
 	apt install -y nodejs
 
+# The native Claude installer is user-scoped, so use its system-wide npm
+# package alongside the other globally installed CLI tools.
 RUN npm install -g \
+	@anthropic-ai/claude-code@latest \
 	@github/copilot@latest \
 	@google/gemini-cli@latest \
 	@openai/codex@latest \
 	opencode-ai@latest
-
-RUN curl -fsSL https://claude.ai/install.sh | bash
 
 RUN curl -Ls https://pkgx.sh/$(uname)/$(uname -m) -o /usr/local/bin/pkgx && \
 	chmod +x /usr/local/bin/pkgx
@@ -80,4 +86,13 @@ RUN curl -L https://github.com/DavHau/nix-portable/releases/latest/download/nix-
 
 COPY --chmod=755 contai-bootstrap /usr/local/bin/contai-bootstrap
 
-ENV PATH="$PATH:/home/${USERNAME}/.local/bin"
+# $HOME has to be the very path the runner mounts the persistent home at, or
+# whatever a tool writes below it lands in the image and is gone on the next
+# run. Both sides use the host's home directory: it keeps a path meaning the
+# same thing inside and outside the container, and the image already carries
+# the building account's UID, GID and names, so this adds no new coupling.
+#
+# These come last so that no RUN sees them: the build runs as root, and a root
+# HOME pointing at the account's home would leave root-owned files in it.
+ENV HOME="${HOME_DIR}"
+ENV PATH="$PATH:${HOME_DIR}/.local/bin"

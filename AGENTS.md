@@ -52,8 +52,9 @@ This project has no test suite. Changes should be verified by:
 1. Building the container: `./build.sh`
 2. Running the container and testing functionality: `./contai`
 3. Verifying the AI tools work: `./contai opencode --version`
-4. Verifying binary-installed tools work: `./contai rtk --version`
-5. Verifying RTK bootstrap writes the expected runtime config for shipped tools
+4. Verifying Claude Code is available to the mapped user: `./contai claude --version`
+5. Verifying binary-installed tools work: `./contai rtk --version`
+6. Verifying RTK bootstrap writes the expected runtime config for shipped tools
 
 ## Linting
 
@@ -126,6 +127,7 @@ set -eu
 # Variables
 data_dir=~/.local/share/contai
 home_dir=$data_dir/home
+container_home=$HOME
 
 # Conditionals
 if test -d "$home_dir"
@@ -137,7 +139,7 @@ fi
 docker run \
 	--rm \
 	-it \
-	-v "$home_dir:$HOME" \
+	-v "$home_dir:$container_home" \
 	contai:latest
 ```
 
@@ -155,9 +157,25 @@ ARG UID
 ARG USERNAME
 ARG GID
 ARG GROUPNAME
+ARG HOME_DIR
 ```
 - Use ARG for build-time configuration
 - Always support UID/GID mapping for host compatibility
+
+The container home is the host's home directory, passed in as the `HOME_DIR`
+build argument and defaulting to `$HOME` in `build.sh`. It has to be the same
+path in three places, or state written below it is silently lost when the
+container exits: the account's home in `useradd`, `ENV HOME`, and the volume
+destination in `contai`. Derive it from `$HOME` in the runner rather than
+repeating a literal, and keep `$HOME/.local/bin` on `PATH` for tools installed
+there by `pkgx`.
+
+Resist replacing it with a fixed path such as `/home/contai`. It looks tidier
+and is one less build argument, but it makes an absolute path mean two
+different things on the two sides of the mount, and it invalidates the
+absolute paths that existing persistent homes already record: `nix` profile
+symlinks, virtualenv interpreters, and the project lists that the AI tools
+keep in their own configuration.
 
 #### RUN Commands
 - Chain related commands with `&&` in single RUN layers
@@ -170,6 +188,10 @@ ARG GROUPNAME
 2. Python packages via `pip` (with `--break-system-packages`)
 3. Node.js setup and npm packages
 4. Binary downloads and installations
+
+Claude Code should use the system-wide npm package in the image. The native
+installer writes its launcher below `$HOME/.local/bin`, which is not a suitable
+image-wide location when the image is built as `root`.
 
 #### Example Dockerfile Pattern
 ```dockerfile
