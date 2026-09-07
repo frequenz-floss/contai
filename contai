@@ -11,6 +11,10 @@ fi
 data_dir=~/.local/share/contai
 
 home_dir=$data_dir/home
+# Where the persistent home is mounted, which is also $HOME in the container:
+# the image is built with the host's home directory as the account's home, so
+# an absolute path below it means the same thing on both sides.
+container_home=$HOME
 env_file="$data_dir/env.list"
 run_opts_file="$data_dir/docker-run-opts.list"
 
@@ -105,7 +109,7 @@ docker run \
 	--security-opt=no-new-privileges \
 	-e TERM="$TERM" -e COLORTERM="$COLORTERM" \
 	--env-file "$env_file" \
-	-v "$home_dir:$HOME" \
+	-v "$home_dir:$container_home" \
 	-v "$PWD:$PWD" \
 	-w "$PWD" \
 	"${run_opts[@]+"${run_opts[@]}"}" \

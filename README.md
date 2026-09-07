@@ -49,12 +49,18 @@ This will create a Docker image tagged as `contai:latest` with your host user's
 UID/GID for proper file permissions.
 
 To override the account created in the image, set `CONTAI_UID`, `CONTAI_USER`,
-`CONTAI_GID`, and/or `CONTAI_GROUP` when building:
+`CONTAI_GID`, `CONTAI_GROUP`, and/or `CONTAI_HOME` when building:
 
 ```sh
 CONTAI_UID=1000 CONTAI_USER=developer CONTAI_GID=1000 CONTAI_GROUP=developers \
 	./build.sh
 ```
+
+`CONTAI_HOME` is the home directory of that account, and defaults to your own
+`$HOME`. `contai` mounts the persistent home at whatever `$HOME` is when it
+runs, so overriding this at build time and not matching it at run time leaves
+the container with a `$HOME` that nothing is mounted at, and anything written
+there is lost when the container exits.
 
 ## Installation
 
@@ -152,7 +158,11 @@ contai opencode
 ```
 
 Your configuration and data will be persisted in `~/.local/share/contai/home`
-across container sessions.
+across container sessions. The directory is mounted at your host home
+directory's own path, so `$HOME` and everything below it is spelled the same
+way inside and outside the container, and configuration that records absolute
+paths stays valid. The contents are still the container's own: `~` inside the
+container is the persistent directory above, not your host home directory.
 
 ## RTK Setup
 

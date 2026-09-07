@@ -126,6 +126,7 @@ set -eu
 # Variables
 data_dir=~/.local/share/contai
 home_dir=$data_dir/home
+container_home=$HOME
 
 # Conditionals
 if test -d "$home_dir"
@@ -137,7 +138,7 @@ fi
 docker run \
 	--rm \
 	-it \
-	-v "$home_dir:$HOME" \
+	-v "$home_dir:$container_home" \
 	contai:latest
 ```
 
@@ -155,9 +156,25 @@ ARG UID
 ARG USERNAME
 ARG GID
 ARG GROUPNAME
+ARG HOME_DIR
 ```
 - Use ARG for build-time configuration
 - Always support UID/GID mapping for host compatibility
+
+The container home is the host's home directory, passed in as the `HOME_DIR`
+build argument and defaulting to `$HOME` in `build.sh`. It has to be the same
+path in three places, or state written below it is silently lost when the
+container exits: the account's home in `useradd`, `ENV HOME`, and the volume
+destination in `contai`. Derive it from `$HOME` in the runner rather than
+repeating a literal, and keep `$HOME/.local/bin` on `PATH` for tools installed
+there by `pkgx`.
+
+Resist replacing it with a fixed path such as `/home/contai`. It looks tidier
+and is one less build argument, but it makes an absolute path mean two
+different things on the two sides of the mount, and it invalidates the
+absolute paths that existing persistent homes already record: `nix` profile
+symlinks, virtualenv interpreters, and the project lists that the AI tools
+keep in their own configuration.
 
 #### RUN Commands
 - Chain related commands with `&&` in single RUN layers
