@@ -180,6 +180,17 @@ To check how many tokens RTK has saved across your sessions:
 contai rtk gain
 ```
 
+Automatic RTK setup always disables telemetry during initialization so a
+first-run consent prompt cannot block container startup. To enable telemetry,
+configure RTK explicitly from the container:
+
+```sh
+contai rtk telemetry enable
+```
+
+This prompts for consent and stores the choice in the persistent container
+home. The automatic startup initialization remains non-interactive.
+
 ## Environment Variables
 
 You can define environment variables in the container by writing to a

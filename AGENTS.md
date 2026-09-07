@@ -210,6 +210,10 @@ When modifying this project:
 5. **Runtime tool initialization**: Keep startup logic in `contai-bootstrap`
    when it depends on the mounted container home or current project
 
+Automatic RTK initialization always sets `RTK_TELEMETRY_DISABLED` to `1` so it
+cannot block on a first-run consent prompt. Users can opt in separately with
+`contai rtk telemetry enable` from an interactive container.
+
 **Important**: When making any changes to the project, especially structural changes
 (adding/removing files, changing build process, modifying project conventions), update
 this AGENTS.md file to reflect those changes.
