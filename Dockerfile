@@ -71,12 +71,20 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
 
 # The native Claude installer is user-scoped, so use its system-wide npm
 # package alongside the other globally installed CLI tools.
+#
+# opencode-ai's postinstall script runs the binary it just downloaded once, as a
+# smoke test, and merely loading that binary creates /tmp/opencode. The build
+# runs as root, so the directory is baked into the image owned by root, and the
+# mapped account cannot write to it at run time even though opencode tells the
+# agents it runs that the directory is theirs to use. Delete it here, with -f so
+# a future opencode-ai that stops creating it does not fail the build.
 RUN npm install -g \
 	@anthropic-ai/claude-code@latest \
 	@github/copilot@latest \
 	@google/gemini-cli@latest \
 	@openai/codex@latest \
-	opencode-ai@latest
+	opencode-ai@latest && \
+	rm -rf /tmp/opencode
 
 RUN curl -Ls https://pkgx.sh/$(uname)/$(uname -m) -o /usr/local/bin/pkgx && \
 	chmod +x /usr/local/bin/pkgx
