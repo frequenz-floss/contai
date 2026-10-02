@@ -1,0 +1,51 @@
+name: Lint
+
+on:
+  pull_request:
+
+# Findings are reported only as annotations, which GitHub shows in the Checks
+# tab and next to the offending lines, so nothing here may write to the pull
+# request. reviewdog only needs to read its diff.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  shfmt:
+    name: shfmt
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: reviewdog/action-shfmt@c5e3ba7497c338866921924691aef4fa18bc1fe0 # v1.1.0
+        with:
+          # Report on the whole tree, not only the lines the pull request
+          # touches: the tree is formatted, and keeping it that way is cheap.
+          filter_mode: nofilter
+          # Fail on every finding. shfmt's carry no severity at all.
+          fail_level: any
+          # The action hardcodes -reporter=github-pr-review, to post review
+          # suggestions, and appends these flags after it, so this one wins.
+          reviewdog_flags: -reporter=github-pr-annotations
+          # No shfmt_flags on purpose. The options live in .editorconfig, so
+          # that a local run and this job cannot disagree.
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: reviewdog/action-shellcheck@d0b8d5fd7fad6afdb6e1b6ce1778892be4d1f427 # v1.34.1
+        with:
+          filter_mode: nofilter
+          # Most of shellcheck's findings are warnings or info, which a
+          # fail_level of error would let through.
+          fail_level: any
+          reporter: github-pr-annotations
+          # The suggestion pass hardcodes -reporter=github-pr-review and
+          # appends these flags after it, so this one wins there too.
+          reviewdog_flags: -reporter=github-pr-annotations
+          # contai and contai-bootstrap have no .sh extension, so they are
+          # found by their shebang instead.
+          check_all_files_with_shebangs: "true"

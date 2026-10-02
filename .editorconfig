@@ -1,0 +1,10 @@
+root = true
+
+[*]
+indent_style = tab
+space_redirects = true
+
+# YAML forbids tabs for indentation.
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
