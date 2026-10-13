@@ -1,0 +1,3 @@
+# pre-commit itself, pinned so Dependabot can bump it. The tools it runs are
+# pinned in .pre-commit-config.yaml.
+pre-commit==4.6.2

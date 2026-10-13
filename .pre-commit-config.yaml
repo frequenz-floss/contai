@@ -1,0 +1,16 @@
+# Each hook is pinned to a commit hash, as a tag can be moved after review,
+# with the version it resolves to in a frozen comment. Dependabot bumps both.
+repos:
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: 479be5958357ba5ab65ce47172117348516860e9 # frozen: v3.14.1-1
+    hooks:
+      # The prebuilt upstream binary, checksummed by the hook's package. The
+      # shfmt-src and shfmt-docker hooks would need Go or Docker instead.
+      - id: shfmt
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: 745eface02aef23e168a8afb6b5737818efbea95 # frozen: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        # One line per finding, which CI can feed to reviewdog.
+        args: [--format=gcc]

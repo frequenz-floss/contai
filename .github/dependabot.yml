@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # The actions in .github/workflows/.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  # The hooks in .pre-commit-config.yaml, which pin shfmt and shellcheck.
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+
+  # pre-commit itself, in requirements-pre-commit.txt.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,0 +1,74 @@
+name: Lint
+
+on:
+  pull_request:
+
+# Findings are reported only as annotations, which GitHub shows in the Checks
+# tab and next to the offending lines, so nothing here may write to the pull
+# request. reviewdog only needs to read its diff.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  lint:
+    name: shfmt and shellcheck
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          # The newest uv whose checksum this release of the action carries,
+          # so it is pinned by the action's hash and moves with its bumps.
+          version: latest-known
+
+      - name: Install pre-commit
+        run: |
+          uv tool install --constraints requirements-pre-commit.txt pre-commit
+          uv tool dir --bin >> "$GITHUB_PATH"
+
+      # Kept apart, so the installation log doesn't end up mixed with the
+      # findings.
+      - name: Install hooks
+        run: pre-commit install-hooks
+
+      # Both checks run on the whole tree, not only the lines the pull request
+      # touches, as the tree is clean and keeping it so is cheap.
+
+      # Before shfmt, which rewrites files and would shift the line numbers.
+      # The runner turns the findings into annotations through the problem
+      # matcher, which needs a pattern of its own for notes: it drops any
+      # severity other than error, warning or notice.
+      - name: shellcheck
+        id: shellcheck
+        run: |
+          echo "::add-matcher::.github/shellcheck-matcher.json"
+          status=0
+          pre-commit run shellcheck --all-files || status=$?
+          echo "::remove-matcher owner=shellcheck::"
+          echo "::remove-matcher owner=shellcheck-note::"
+          exit "$status"
+
+      # shfmt fixes the files in place, so the fix is the diff, which the next
+      # step reports. A script it cannot parse fails the hook too, without
+      # leaving a diff, so this step is the one that fails the job.
+      - name: shfmt
+        id: shfmt
+        # Check formatting too when shellcheck found something, but not when
+        # it never ran because the setup failed.
+        if: ${{ !cancelled() && steps.shellcheck.outcome != 'skipped' }}
+        run: pre-commit run shfmt --all-files
+
+      # The action runs reviewdog on the diff, with a reviewdog version pinned
+      # in each of its releases, so Dependabot bumps both together.
+      - name: Report shfmt
+        if: ${{ !cancelled() && steps.shfmt.outcome == 'failure' }}
+        uses: reviewdog/action-suggester@c387862ad6765a9729f2b40ee4d8b5769f2145c7 # v1.26.1
+        with:
+          tool_name: shfmt
+          level: error
+          filter_mode: nofilter
+          # The action hardcodes -reporter=github-pr-review, to post review
+          # suggestions, and appends these flags after it, so this one wins.
+          reviewdog_flags: -reporter=github-pr-annotations

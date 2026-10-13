@@ -1,0 +1,16 @@
+root = true
+
+# Shell scripts, read by shfmt too. The extensionless ones are listed by name:
+# shfmt's [[shell]] section would find them by shebang, but editors don't
+# understand it.
+[{*.sh,contai,contai-bootstrap}]
+indent_style = tab
+space_redirects = true
+
+[Dockerfile]
+indent_style = tab
+
+# YAML forbids tabs for indentation.
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2

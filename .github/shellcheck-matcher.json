@@ -1,0 +1,32 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "shellcheck",
+      "pattern": [
+        {
+          "regexp": "^(.+):(\\d+):(\\d+): (error|warning): (.* \\[(SC\\d+)\\])$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5,
+          "code": 6
+        }
+      ]
+    },
+    {
+      "owner": "shellcheck-note",
+      "severity": "notice",
+      "pattern": [
+        {
+          "regexp": "^(.+):(\\d+):(\\d+): note: (.* \\[(SC\\d+)\\])$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4,
+          "code": 5
+        }
+      ]
+    }
+  ]
+}

@@ -15,12 +15,18 @@ Read README.md for complete project documentation including features and usage.
 
 ```
 contai/
+├── .editorconfig          # shfmt/editor settings
+├── .github/dependabot.yml # Weekly bumps of actions, hooks and pre-commit
+├── .github/shellcheck-matcher.json  # CI: shellcheck output to annotations
+├── .github/workflows/     # CI: the pre-commit hooks, reported as annotations
+├── .pre-commit-config.yaml  # shfmt and shellcheck hooks, pinned
 ├── AGENTS.md              # This file - AI agent instructions
 ├── README.md              # Project documentation
 ├── Dockerfile             # Container definition with dev tools
 ├── build.sh               # Build script with user permission handling
 ├── contai                 # Container runner script
 ├── contai-bootstrap       # Runtime container bootstrap for RTK setup
+├── requirements-pre-commit.txt  # pre-commit itself, pinned
 └── agent-instructions.md  # Global agent instructions for end users
 ```
 
@@ -58,15 +64,36 @@ This project has no test suite. Changes should be verified by:
 
 ## Linting
 
-No project-level linting is configured. However, the container includes these tools:
-- Shell: `shellcheck`, `shfmt`
-- Python: `ruff`, `flake8`, `pylint`, `mypy`, `black`, `isort`
+Shell scripts are checked by `shellcheck` and formatted by `shfmt`, both run
+through [pre-commit](https://pre-commit.com/). `.pre-commit-config.yaml` pins
+the version of each tool, and `shfmt` takes its settings from
+`.editorconfig`. CI runs the same hooks on every pull request, via
+`.github/workflows/lint.yml`, reporting findings inline as annotations. To
+check and fix locally:
 
-To lint shell scripts locally (if shellcheck is installed):
 ```sh
-shellcheck build.sh contai contai-bootstrap
-shfmt -d build.sh contai contai-bootstrap
+uv tool install -c requirements-pre-commit.txt pre-commit  # once, and after bumps
+pre-commit run --all-files
+pre-commit install  # optional, to run the hooks on every commit
 ```
+
+The `shfmt` hook fixes formatting differences in place, so `git diff` normally
+contains the fix. Parse errors also fail the hook without producing a diff.
+Do not hand-format against it: what `shfmt` produces is the house style by
+definition.
+
+Dependabot bumps the hooks, pre-commit and the actions. A `shfmt` bump that
+formats differently fails its own pull request: add the reformatting to it,
+as a separate commit, before merging.
+
+pre-commit finds the extensionless scripts by their shebang, but only when
+they are executable: commit a new one with `chmod +x`, or it is silently
+skipped. List it in `.editorconfig` too, which matches scripts by name.
+
+The container also ships `shellcheck` and `shfmt`, plus Python linters
+(`ruff`, `flake8`, `pylint`, `mypy`, `black`, `isort`), but from Ubuntu: their
+versions can differ from the pinned ones, and a different `shfmt` can format
+differently.
 
 ## Code Style Guidelines
 
@@ -110,9 +137,10 @@ set -eu
 #### Conditionals
 - Use `test` command or `[` for conditions: `if test "$tool" = "contai"`
 - Use `=` for string comparison, not `==`
+- Keep `then` and `do` on the `if`/`while` line, as `shfmt` writes them
 
 #### Indentation
-- Use tabs for indentation, not spaces
+- Use tabs for indentation, not spaces (set by `.editorconfig`)
 - Indent continuation lines in multi-line commands
 
 #### Line Continuation
@@ -130,8 +158,7 @@ home_dir=$data_dir/home
 container_home=$HOME
 
 # Conditionals
-if test -d "$home_dir"
-then
+if test -d "$home_dir"; then
 	echo "Directory exists"
 fi
 
@@ -231,6 +258,12 @@ When modifying this project:
 4. **New system tools**: Add to apt-get install section in Dockerfile
 5. **Runtime tool initialization**: Keep startup logic in `contai-bootstrap`
    when it depends on the mounted container home or current project
+6. **GitHub Actions**: pin every action to a full commit hash, with a trailing
+   comment naming the version it resolves to, as in
+   `uses: actions/checkout@3d3c42e... # v7.0.1`. Tags and branches can be
+   moved to point at other code after review, so a tag is not a pin. Never
+   write a version number into an action input, such as `reviewdog_version`:
+   Dependabot only bumps the `uses:` line, so the number would never move
 
 Automatic RTK initialization always sets `RTK_TELEMETRY_DISABLED` to `1` so it
 cannot block on a first-run consent prompt. Users can opt in separately with
