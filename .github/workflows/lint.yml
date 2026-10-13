@@ -2,6 +2,14 @@ name: Lint
 
 on:
   pull_request:
+  # Also on pushes, so a branch on a fork gets checked before it becomes a pull
+  # request, and on the main branch after a merge.
+  push:
+    branches-ignore:
+      # Dependabot pushes its branches here and opens a pull request for each
+      # one, which already runs this workflow.
+      - "dependabot/**"
+  workflow_dispatch:
 
 # Findings are reported only as annotations, which GitHub shows in the Checks
 # tab and next to the offending lines, so nothing here may write to the pull
