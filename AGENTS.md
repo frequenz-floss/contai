@@ -67,9 +67,9 @@ This project has no test suite. Changes should be verified by:
 Shell scripts are checked by `shellcheck` and formatted by `shfmt`, both run
 through [pre-commit](https://pre-commit.com/). `.pre-commit-config.yaml` pins
 the version of each tool, and `shfmt` takes its settings from
-`.editorconfig`. CI runs the same hooks on every pull request, via
-`.github/workflows/lint.yml`, reporting findings inline as annotations. To
-check and fix locally:
+`.editorconfig`. CI runs the same hooks on every pull request and push, and
+on demand from the Actions tab, via `.github/workflows/lint.yml`, reporting
+findings inline as annotations. To check and fix locally:
 
 ```sh
 uv tool install -c requirements-pre-commit.txt pre-commit  # once, and after bumps
