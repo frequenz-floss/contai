@@ -178,6 +178,11 @@ On startup, `contai` automatically configures RTK for:
 - OpenAI Codex CLI
 - OpenCode
 
+This only runs on the first start and whenever the image's RTK version changes,
+recorded in `~/.local/state/contai/rtk-init-version` inside the container. A
+setup that fails is retried on the next start. Delete that file to run it again
+anyway, for example after removing a configuration file RTK wrote.
+
 When you launch `copilot`, `contai` also installs RTK's project-scoped Copilot
 integration in the current project root by creating:
 

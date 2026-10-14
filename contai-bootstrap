@@ -3,6 +3,9 @@ set -eu
 
 tool=
 
+# The RTK version that last set up the global configuration successfully.
+rtk_stamp=${XDG_STATE_HOME:-$HOME/.local/state}/contai/rtk-init-version
+
 if test $# -gt 0; then
 	tool=$1
 	shift
@@ -21,15 +24,32 @@ enable_rtk() {
 	# exist when the persistent home is new.
 	mkdir -p "$HOME/.claude"
 
-	run_rtk_init init -g --auto-patch
-	run_rtk_init init -g --gemini --auto-patch
-	run_rtk_init init -g --codex
-	run_rtk_init init -g --opencode --auto-patch
+	enable_rtk_global
 
 	# RTK's Copilot integration is project-scoped, so only install it when
 	# launching Copilot and write it into the current project's root.
 	if test "$tool" = "copilot"; then
 		enable_rtk_copilot
+	fi
+}
+
+enable_rtk_global() {
+	# The global setup lives in the persistent home, so it only needs to run
+	# again when RTK changes. A failed run leaves the stamp alone and retries.
+	rtk_version=$(rtk --version 2> /dev/null) || rtk_version=
+	if test -n "$rtk_version" && test "$(cat "$rtk_stamp" 2> /dev/null)" = "$rtk_version"; then
+		return
+	fi
+
+	rtk_init_failed=
+	run_rtk_init init -g --auto-patch
+	run_rtk_init init -g --gemini --auto-patch
+	run_rtk_init init -g --codex
+	run_rtk_init init -g --opencode --auto-patch
+
+	if test -n "$rtk_version" && test -z "$rtk_init_failed"; then
+		mkdir -p "${rtk_stamp%/*}"
+		printf '%s\n' "$rtk_version" > "$rtk_stamp"
 	fi
 }
 
@@ -46,6 +66,7 @@ run_rtk_init() {
 			printf ' %s' "$arg" >&2
 		done
 		printf '\n' >&2
+		rtk_init_failed=1
 		return 0
 	fi
 
