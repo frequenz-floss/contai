@@ -190,9 +190,12 @@ To check how many tokens RTK has saved across your sessions:
 contai rtk gain
 ```
 
-Automatic RTK setup always disables telemetry during initialization so a
-first-run consent prompt cannot block container startup. To enable telemetry,
-configure RTK explicitly from the container:
+Automatic RTK setup never waits for input, so no RTK prompt can block container
+startup: it disables telemetry during initialization and takes RTK's default
+answer to any other question, for example declining to route Claude Code
+through RTK's proxy. To answer those questions yourself, run the same `rtk init`
+command from the container, for example `contai rtk init -g --opencode`. To
+enable telemetry, configure RTK explicitly from the container:
 
 ```sh
 contai rtk telemetry enable

@@ -265,9 +265,13 @@ When modifying this project:
    write a version number into an action input, such as `reviewdog_version`:
    Dependabot only bumps the `uses:` line, so the number would never move
 
-Automatic RTK initialization always sets `RTK_TELEMETRY_DISABLED` to `1` so it
-cannot block on a first-run consent prompt. Users can opt in separately with
-`contai rtk telemetry enable` from an interactive container.
+Automatic RTK initialization must never wait for input, as its output is
+hidden and a prompt would hang startup silently. It sets
+`RTK_TELEMETRY_DISABLED` to `1`, passes `--auto-patch` where the mode accepts
+it, reads stdin from `/dev/null` so RTK takes the default answer to any other
+prompt, and runs under `timeout`. Keep all of that when adding an init call.
+Users can opt in to telemetry separately with `contai rtk telemetry enable`
+from an interactive container.
 
 **Important**: When making any changes to the project, especially structural changes
 (adding/removing files, changing build process, modifying project conventions), update
