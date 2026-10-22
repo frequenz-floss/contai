@@ -265,9 +265,18 @@ When modifying this project:
    write a version number into an action input, such as `reviewdog_version`:
    Dependabot only bumps the `uses:` line, so the number would never move
 
-Automatic RTK initialization always sets `RTK_TELEMETRY_DISABLED` to `1` so it
-cannot block on a first-run consent prompt. Users can opt in separately with
-`contai rtk telemetry enable` from an interactive container.
+Automatic RTK initialization must never wait for input, as its output is
+hidden and a prompt would hang startup silently. It sets
+`RTK_TELEMETRY_DISABLED` to `1`, passes `--auto-patch` where the mode accepts
+it, reads stdin from `/dev/null` so RTK takes the default answer to any other
+prompt, and runs under `timeout`. Keep all of that when adding an init call.
+The global setup only runs when `rtk --version` differs from the one recorded
+in `~/.local/state/contai/rtk-init-version` after the last successful run;
+the project-scoped Copilot setup still runs on every `copilot` launch. A
+changed init call only reaches existing homes with the next RTK release, so
+delete that file to test one.
+Users can opt in to telemetry separately with `contai rtk telemetry enable`
+from an interactive container.
 
 **Important**: When making any changes to the project, especially structural changes
 (adding/removing files, changing build process, modifying project conventions), update
